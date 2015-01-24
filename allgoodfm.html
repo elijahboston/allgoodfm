@@ -1,0 +1,57 @@
+<head>
+    <title>allgoodfm</title>
+</head>
+
+<body>
+    <h1>allgood.fm</h1>
+
+    {{> loginButtons}}
+
+    {{> hello}}
+
+    <hr/>
+
+    <h2>Stations</h2>
+    <ul>
+        {{#each stations}}
+            {{> station }}
+        {{/each}}
+    </ul>
+    {{#if currentStation}}
+
+        <hr/>
+        <h2>Now Playing</h2>
+        <p><b>Now Listening to:</b> {{ currentStation.name }}</p>
+        <p>Playing: {{ currentStation.track.title }} - {{ currentStation.track.user.username }}</p>
+
+        {{#if currentStation.track}}
+        <audio controls autoplay>
+            <source src="{{ streamURL }}" type="audio/mp3">
+        </audio>
+        {{/if}}
+
+    {{/if}}
+    <hr/>
+
+    {{#if currentUser and currentStation}}
+        <h2>Your Favorites</h2>
+        <button id="addStation">Add Station</button>
+        <ul>
+            {{#each userFavorites}}
+                {{> user_favorites }}
+            {{/each}}
+        </ul>
+    {{/if}}
+</body>
+
+<template name="hello">
+    <p>Hit play OR Connect with your SoundCloud account to DJ</p>
+</template>
+
+<template name="user_favorites">
+    <li><a href="#" class="userFavorite">{{ title }} / {{ user.username }}</a></li>
+</template>
+
+<template name="station">
+    <li><a href="#" class="playStation">{{ name }}</a>{{#if track}} - Now Playing {{ track.title }} / {{ track.user.username }}{{/if}} {{#if currentUser}}<a href="#" class="removeStation">(X)</a>{{/if}}</li>
+</template>
