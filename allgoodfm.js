@@ -7,11 +7,10 @@ if (Meteor.isClient) {
     Session.setDefault('currentStation', null);
 
     function getCurrentStation() {
-        var currentStation = Session.get('currentStation'),
-            station = Stations.find({_id: currentStation._id}).fetch();
+        var currentStation = Session.get('currentStation');
 
-        if (station) {
-            return station[0];
+        if (currentStation) {
+            return Stations.findOne({_id: currentStation._id});
         } else {
             return null;
         }
@@ -69,9 +68,9 @@ if (Meteor.isClient) {
         },
         'click a.playStation': function () {
             // begin playing whatever is being streamed
-            var station = Stations.find({ _id: this._id }).fetch();
+            var station = Stations.findOne({ _id: this._id });
             if (station) {
-                Session.set('currentStation', station[0]);
+                Session.set('currentStation', station);
             }
         },
         'click a.userFavorite': function() {
@@ -79,17 +78,11 @@ if (Meteor.isClient) {
             Stations.update({_id: currentStation._id}, {
                 $set: { track: this }
             });
-
-            //currentStation.track = this;
-            //Session.set('currentStation', currentStation);
-
         }
     });
 
     Tracker.autorun(function() {
-        var currentStation = Session.get('currentStation'),
-            station = Stations.find().fetch();
-
+        Stations.findOne();
         refreshPlayer();
     });
 
