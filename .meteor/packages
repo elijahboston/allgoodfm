@@ -12,3 +12,6 @@ accounts-ui
 quietcreep:accounts-soundcloud
 http
 quietcreep:soundcloud
+underscore
+iron:router
+mizzao:user-status

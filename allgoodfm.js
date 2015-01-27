@@ -1,9 +1,9 @@
-UserFavoriteTracks = new Mongo.Collection('UserFavoriteTracks');
+
 Stations = new Mongo.Collection('Stations');
+UserFavoriteTracks = new Mongo.Collection('UserFavoriteTracks');
 
 if (Meteor.isClient) {
 
-    // counter starts at 0
     Session.setDefault('currentStation', null);
 
     function getCurrentStation() {
@@ -31,7 +31,7 @@ if (Meteor.isClient) {
         }
     }
 
-    Template.body.helpers({
+    Template.Station.helpers({
         userFavorites: function() {
             return UserFavoriteTracks.find();
         },
@@ -40,12 +40,10 @@ if (Meteor.isClient) {
         },
         currentStation: function() {
             return getCurrentStation();
-        },
-        userToken: function() {
-            if (Meteor.user()) { return Meteor.user().services.soundCloud.accessToken; }
+        }
+    });
 
-            return '';
-        },
+    Template.NowPlaying.helpers({
         streamURL: function() {
             var currentStation = getCurrentStation();
             Meteor.call('getStreamURL', currentStation.track, function(err, resp) {
@@ -60,7 +58,11 @@ if (Meteor.isClient) {
         'click button#addStation': function () {
             var name = window.prompt('Enter a name for the station.');
             if (name) {
-                Stations.insert({name: name});
+                Meteor.call('createStation', Meteor.user(), name, function(err, resp) {
+                    if (!err) {
+                        return resp;
+                    }
+                });
             }
         },
         'click a.removeStation': function () {
@@ -70,13 +72,22 @@ if (Meteor.isClient) {
             // begin playing whatever is being streamed
             var station = Stations.findOne({ _id: this._id });
             if (station) {
+                Meteor.users.update({_id: Meteor.user()._id}, {
+                    $set: {
+                        currentStation: station
+                    }
+                });
                 Session.set('currentStation', station);
             }
         },
         'click a.userFavorite': function() {
             var currentStation = Session.get('currentStation');
-            Stations.update({_id: currentStation._id}, {
-                $set: { track: this }
+            currentStation.track = this;
+
+            Meteor.call('changeStationTrack', Meteor.user(), currentStation, function(err, resp) {
+                if (!err) {
+                    return resp;
+                }
             });
         }
     });
@@ -128,7 +139,43 @@ if (Meteor.isServer) {
         getStreamURL: function(track) {
             this.unblock();
             return track.stream_url + '?client_id='+SOUNDCLOUD_CLIENT_ID;
+        },
+        changeStationTrack: function(user, station) {
+            if (user) {
+                Stations.update({ _id: station._id }, { $set: { track: station.track } });
+            } else {
+                throw new Meteor.Error('update-station-unauthorized', 'You don\'t have permission to update this station.');
+            }
+        },
+        createStation: function(user, name) {
+            if (user) {
+                Stations.insert({name: name});
+            } else {
+                throw new Meteor.Error('create-station-unauthorized', 'You must connect to SoundCloud before you can create a station.');
+            }
+
         }
     });
 
-};
+}
+
+Router.route('/', function() {
+    var templateData = {
+        stations: Stations.find().fetch()
+    };
+    this.layout('LayoutMain');
+    this.render('Main', { data: templateData });
+});
+
+Router.route('/listen/:_id',function() {
+    var _id = this.params._id,
+        currentStation = Stations.findOne({ _id: _id });
+    var templateData = {
+            currentStation: currentStation
+        };
+
+    Session.set('currentStation', currentStation);
+
+    this.layout('LayoutMain');
+    this.render('Station', { data: templateData });
+});
