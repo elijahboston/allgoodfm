@@ -24,7 +24,7 @@
     <p>Playing: {{ currentStation.track.title }} - {{ currentStation.track.user.username }}</p>
 
     {{#if currentStation.track}}
-        <audio controls autoplay>
+        <audio controls>
             <source src="{{ streamURL }}" type="audio/mp3">
         </audio>
     {{/if}}
@@ -54,12 +54,10 @@
 
 <template name="Station">
     {{> NowPlaying }}
-    {{#if currentUser}}
-        <h2>Your Favorites</h2>
-        <ul>
-            {{#each userFavorites}}
-                {{> user_favorites }}
-            {{/each}}
-        </ul>
-    {{/if}}
+    <h2>Your Favorites</h2>
+    <ul>
+        {{#each userFavorites}}
+            {{> user_favorites }}
+        {{/each}}
+    </ul>
 </template>

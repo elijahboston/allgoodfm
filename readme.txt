@@ -1,0 +1,1 @@
+This is a small Meteor app that allows a user to stream SoundCloud audio to multiple users within the same room simultaneously.
